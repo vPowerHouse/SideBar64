@@ -12,16 +12,9 @@ object SideBar: TSideBar
   Position = poDesigned
   Visible = True
   TextHeight = 15
-  object Label1: TLabel
-    Left = 112
-    Top = 184
-    Width = 34
-    Height = 15
-    Caption = 'Label1'
-  end
   object Splitter1: TSplitter
     Left = 0
-    Top = 236
+    Top = 273
     Width = 206
     Height = 3
     Cursor = crVSplit
@@ -32,10 +25,17 @@ object SideBar: TSideBar
     Left = 0
     Top = 0
     Width = 206
-    Height = 236
+    Height = 273
     Align = alTop
     Caption = 'Select form to resize or show '
     TabOrder = 0
+    object Label1: TLabel
+      Left = 9
+      Top = 169
+      Width = 34
+      Height = 15
+      Caption = 'Label1'
+    end
     object ListBox1: TListBox
       Left = 9
       Top = 23
@@ -82,33 +82,42 @@ object SideBar: TSideBar
       OnClick = Hnd_sizeofClick
     end
     object Button1: TButton
-      Left = 60
-      Top = 203
+      Left = 118
+      Top = 165
       Width = 75
       Height = 25
-      Caption = 'Button1'
+      Caption = 'DT1 Show'
       TabOrder = 5
       OnClick = Button1Click
     end
-  end
-  object btnRunStop: TButton
-    Left = 8
-    Top = 184
-    Width = 75
-    Height = 17
-    Caption = 'btnRunStop'
-    TabOrder = 1
-    OnClick = btnRunStopClick
+    object btnRunStop: TButton
+      Left = 9
+      Top = 197
+      Width = 75
+      Height = 20
+      Caption = 'btnRunStop'
+      TabOrder = 6
+      OnClick = btnRunStopClick
+    end
+    object Button2: TButton
+      Left = 118
+      Top = 200
+      Width = 75
+      Height = 25
+      Caption = 'DT2 Show'
+      TabOrder = 7
+      OnClick = Button2Click
+    end
   end
   object memoShowMessages: TMemo
     Left = 0
-    Top = 239
+    Top = 276
     Width = 206
     Height = 341
     Align = alTop
     Lines.Strings = (
       'memoShowMessages')
-    TabOrder = 2
+    TabOrder = 1
   end
   object TaskTimer: TTimer
     Enabled = False

@@ -1,35 +1,55 @@
 #MDI Demo
 
+Goodies
+1. TwoHeaded to debug second app connect to it using Run|connect running process
+2. SideBar records the handles when debugging
+3. SideBar parents to a Child when gets the focus.
 
-
-![SideBar64](TwoHead.png)
 
 #Pat's MDI programming notes
 
-Critical for the MDI child form to have cafree in on close for the visualManager to work tabs and child views.
-//Global Forms names wreck the action
+Critical for the MDI child form to have __caFree__ in close for the VisualManager to close tabs and child views.
 
-Even with the visual manager the windows can still get its slimey hands on a window parented on the chbeild.  the Sidebar parent is set to nil when MDICount < 2 on Activate and DeActivate Events.
-
+# Global Form names cause trouble!
 
 Or how to reduce the need for global variables for both MDI and SDI use runtime
-construction using names from the script in Inifile or a demo script embeded in a
-Const Str. This allows the
+construction using names from the [section] in Inifile or Lines embedded in a
+Const Str. Since the MDI must be the mainform.
 
 Example app shows intregrating the form1 and form2 into the new improved MDI sample
-First and second issue are the global variables Form1 and Form2. To turn them into MDIChildren We create the child forms with the Names inside a procedure and even using an var name inside a begin end block
+First and second issue are the global variables Form1 and Form2. To turn them into MDIChildren We create the child forms with the Names inside a procedure and even try inline var name inside a begin..end in form4.
+So please no Global variables for the mdi children!
 
 The scope of the MDI children are nestled under the TWinControl the like a TGraphic Control ie the parent controls its drawing. FMX controls likely could been placed beside Tgraphic controls in class Heirarchy say TFMXControl vs TWinControl.
 
 
-  The improved Mdiapp has the AboutBox created after the MainForm.
+The improved Mdiapp has the AboutBox created after the MainForm.
+
+
+The MDIAPP Demo Button has a ModalResult set in Object inspector but child windows can't ShowModal. This Demo has
 
 MDI likes the childform declared in the procedure doing the form2 and form4 readily
 ran using the new MDI in D
 
+
+Windows frees any window parented to a window being freed. When the sidebar is parented on the Child, the Sidebar Parent is set to nil when __MDICount__ < 2 on __Activate__ and __DeActivate__ Events.
+
+
 ##MDI Demo with a second MDI Demo running
 ![SideBar64TimesTwo](TwoHead2.png)
 
+##2025.07.01
+New DPR code
+- Changed Uwe Raabe code to Class function
+- Changed to one mainform variable that can be Tmainform2 in its Instantiation
+- Lost xxx
+- -xxx
+
+
+
+
+
+old dpr code
 ```
 begin
   LoaderVar := TwoHeadLoader;
@@ -94,9 +114,10 @@ Another thing about using style is the path the file dialog uses is changed
 
 
 
-ModalR switch on bad if turning a
+//ModalR switch on bad if turning a
 
-
+Log output
+```
 h12.475 Jumper Looked at MainForm
 Dee
 Cee
@@ -133,7 +154,8 @@ h17.348 Dee Looked at 0-MainForm
 3-Cee
 4-Bee
 5-Aye
-
+```
+Didn't work out
 ```
 object LandingZone: TPanel
   Left = 0
@@ -153,11 +175,12 @@ end
 
 
 
-The zip shows
+### Improved MDI notes and sources
 
+Marco Cantu youtubes
 
 [Shortyoutube]:https://www.youtube.com/watch?v=xEyKSzs5Yuw
-     Stuff here
+Stuff here
 
 Short Vid [Shortyoutube]
 
@@ -231,6 +254,9 @@ object FormTabsBar2: TFormTabsBar
   ShowTabsMenuButton = True
 end
 ```
+One Afternoon D12 rolled back to ShowMessage code that was commented hours earlier.
+
+
 ```Pascal .dpr
 ///
 /// Tried using showmessage since debugging break points not working
@@ -241,6 +267,7 @@ end
 ```
 ##Old MDI notes
 <hr>
+https://en.delphipraxis.net/topic/2587-rio-and-mdi-applications/
 
 >But, assuming that NewValue is never negative, then I would use the Visible property which is a short-hand for Show/Hide:
 >```
@@ -256,7 +283,11 @@ Was able to get the child menus to work using AutoMerge on the child form MainMe
 Windows 11 sometimes doesn't have the conventional BorderIcons on the main form. The child forms. Now have the exit Icon.
 Secondly. to get the resize icon to resize and not snap the , you need to touch this above the snap dialog presented on Windows 11 to resize.
 
-#Sercet mutex
+## Second mutex
+
+Worked stuck a second mutex in Second app. But also had paramstr and WinClassName stuff
+Note the Tmainform2 uses override but Tmainform needed an empty Destroy to get the Descendant to make a working Destroy to free the mutex.
+```
 procedure TMainForm2.CreateParams(var Params: TCreateParams);
 begin
   inherited;
@@ -264,8 +295,11 @@ begin
    // Caption := DT2winclassname;
   //mutexDT2 := TMutex.Create(nil, False, DT2winclassname);//    '{82A1F532-3723-4F29-BBE3-3DAEE40894E7}');
 end;
-
-#possible precord
+```
+## possible precord
+I like to gather the information needed for a new program in a record which then
+use in a TList...
+```
 //  TProc
 //  TmyProc = Procedure (Arg1: Integer; Arg2: string; H3: HWND;I4: Integer; B5: Boolean) ;
 //
@@ -276,13 +310,14 @@ end;
 //    starttick: Integer;
 //    isComplement: Boolean;  //other wise back trce 2 to 1;
 //    SetFields: TmyProc;
-//    //SETTTFIELDS: TProc< Role:Integer,string,HWND,Integer,Boolean>;
+//    //SetFields: TProc< Role:Integer,string,HWND,Integer,Boolean>;
 //    update: TNotifyEvent;
 //    procedure Onupdate(Sender: TObject);
 //    procedure Setmyfields( I1: Integer; S2: string; H3: HWND; I4: Integer; B5: Boolean);
 //  end;
+```
 { TAppInformation }
-
+```
 //procedure TAppInformation.Onupdate(Sender: TObject);
 //begin
 //  If Assigned(update) then Setmyfields(Role,moniker,Hnd,starttick,isComplement);
@@ -299,8 +334,9 @@ end;
 //  // component needs checked
 //    iswindow(Hnd) //S
 //end;
+```
 # Rid the mutexs
-
+```
 //procedure TMainForm2.FormClose(Sender: TObject; var Action: TCloseAction);
 //begin
 //  mutexDT2.Free;
@@ -313,56 +349,6 @@ end;
 //  mutexDT2.Free;
 //  inherited;
 //end;
-
 ```
-object Panel1: TPanel
-  Left = 736
-  Top = 176
-  Width = 100
-  Height = 100
-  Caption = 'Panel1'
-  TabOrder = 3
-  object Label2: TLabel
-    Left = 66
-    Top = 0
-    Width = 34
-    Height = 15
-    Caption = 'Label1'
-  end
-  object Label3: TLabel
-    Left = 66
-    Top = 8
-    Width = 34
-    Height = 15
-    Caption = 'Label1'
-  end
-  object btnShowDT1: TButton
-    Left = -49
-    Top = 68
-    Width = 141
-    Height = 22
-    Caption = 'DT 1'
-    TabOrder = 0
-    OnClick = btnShowDT1Click
-  end
-  object btnShow_Other_App: TButton
-    Left = -113
-    Top = 56
-    Width = 165
-    Height = 22
-    Caption = 'Open Desktop Two'
-    TabOrder = 1
-    OnClick = btnShow_Other_AppClick
-  end
-  object tbListForms: TButton
-    Left = 25
-    Top = 0
-    Width = 75
-    Height = 22
-    Hint = 'List all forms using Screendotforms'
-    Caption = 'List Forms'
-    TabOrder = 2
-    OnClick = tbListFormsClick
-  end
-end
-``` //cut 2024.12.16
+![SideBar64](TwoHead.png)
+

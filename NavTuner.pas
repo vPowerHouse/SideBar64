@@ -1,19 +1,20 @@
 unit NavTuner;
 
-//  copyright 2024 Pat Foley
+//  Copyright (c) 2024 Pat Foley
 
-// License requires
+// License MIT
 
 interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.ComCtrls, Vcl.Forms, Vcl.ExtCtrls,   Vcl.Dialogs, Vcl.StdCtrls;
+  Vcl.Controls, Vcl.ComCtrls, Vcl.Forms, Vcl.ExtCtrls,
+     Vcl.Dialogs, Vcl.StdCtrls, TwoHeadTypes;
 const
   // give the scalers bigger scale factors
   // round 10/11  or round
   // was 1_000 952
-  Biggly = 96 * 11 - 96 DIV 2;   //1.05 ISH
+  Biggly = 96 * 11 - 96 div 2;   //1.05 ISH
   Smaller = 96 * 10;
 
 type
@@ -24,50 +25,39 @@ type
     ListBox1: TListBox;
     Sel_Show: TButton;
     Shrink: TButton;
-    TaskTimer: TTimer;
-    btnRunStop: TButton;
-    Label1: TLabel;
     memoShowMessages: TMemo;
     Splitter1: TSplitter;
     Button1: TButton;
+    Label1: TLabel;
+    btnRunStop: TButton;
+    Button2: TButton;
+    TaskTimer: TTimer;
     procedure btnRunStopClick(Sender: TObject);
     procedure Button1Click(Sender: TObject);
-    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure Button2Click(Sender: TObject);
     procedure GrowClick(Sender: TObject);
     procedure Hnd_sizeofClick(Sender: TObject);
     procedure ListBox1DblClick(Sender: TObject);
     procedure Sel_ShowClick(Sender: TObject);
     procedure ShrinkClick(Sender: TObject);
   private
-    FApp,
-    FComplement: HWND;
-    FOnUpdateMainEvent: TNotifyEvent;
+//    FForm: TForm;
+    FOnUpdateRemoteTask: TNotifyEvent;
     procedure TaskTimerTimer(Sender: TObject);
   protected
-    procedure UpdateMainEvent;
+    procedure UpdateRemoteTask;
   public
-        procedure ListHwnd;
-
+    procedure SwitchApp(const Cmd: TDualCommand);
     procedure MemoAdd(const inString: string);
-    { Public declarations }
     procedure UpdateListUI(Sender: TObject);
-///3    procedure UpdateHandlesetal(const AappH, ACompH: HWND; AUpdateEvent: TNotifyEvent);
-//    procedure UpdateMainTick(Sender: TObject);
   published
-    property OnUpdateMainEvent: TNotifyEvent read FOnUpdateMainEvent write FOnUpdateMainEvent;
+    property OnUpdateRemoteTask: TNotifyEvent read FOnUpdateRemoteTask write FOnUpdateRemoteTask;
   end;
-
-var
-  Jumper: TsideBar;
-  //  https://stackoverflow.com/questions/1187487/how-to-access-delphi-function-at-dpr-scope
-  LoaderVar: Function(var h2, h3, h4, H5, h6: HWND):hwnd;
 
 
 implementation
 
 {$R *.dfm}
-//var
-//  mainunitUpdate: TNotifyEvent;
 
 procedure TSideBar.btnRunStopClick(Sender: TObject);
 begin
@@ -80,19 +70,12 @@ end;
 
 procedure TSideBar.Button1Click(Sender: TObject);
 begin
-  ListHwnd;
+  SwitchApp(dcShowDT1);
 end;
 
-procedure TSideBar.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+procedure TSideBar.Button2Click(Sender: TObject);
 begin
-//    TaskTimer.Enabled := False;
-//  //if parent  then
-//
-//  if parent <> nil then
-//  begin
-//    CanClose := False;
-//    parent := Nil;
-//  end;
+  SwitchApp(dcShowDT2);
 end;
 
 procedure TSideBar.GrowClick(Sender: TObject);
@@ -133,13 +116,19 @@ begin
   F.Show;
 end;
 
-procedure TSideBar.ListHwnd;
-var RC ,h2, h3, h4, H5, h6: HWND;
+procedure TSideBar.SwitchApp(const Cmd: TDualCommand);
+//var h2, h3, h4: HWND;
+var
+  FN: string;
 begin
-    //  https://stackoverflow.com/questions/1187487/how-to-access-delphi-function-at-dpr-scope
-  RC := LoaderVar(h2, h3, h4, H5, h6);
-  MemoAdd(NativeUInt(H6).ToString);
-  Button1.Caption := 'Command ' + NativeUInt(H6).ToString;
+  //  https://stackoverflow.com/questions/1187487/how-to-access-delphi-function-at-dpr-scope
+  //FN := Screen.Forms[ListBox1.ItemIndex].Caption;
+///  FForm := TForm(ListBox1.Items.Objects[findex]);
+//  if pos('.', FForm.Caption) < 1 then
+//  FN:= '';
+  FN := 'Dummy.Txt';//  ParamStr(1); change under run set params
+  //LoaderVar(h2, h3, h4,{ Handle,} FN, Cmd);
+  TYenYang.urLoader1(DT1winclassname, DT2winclassname, FN, Cmd);
 end;
 
 procedure TSideBar.MemoAdd(const inString: string);
@@ -154,14 +143,13 @@ var
 begin
   //get object instance unsure why a -1 can happen when items are listed
   //it happens when list is clicked over an area where the text of an item is not--
-  //therefore no item gets selected?
+  //therefore no item gets selected!
   LB := ListBox1;
   if LB.ItemIndex = -1 then
   begin
     memoadd('Ouch better luck next time :)');
     memoadd('It does that--try again');
-    memoadd('the item becomes selected when it background is blue');
-
+    memoadd('the item becomes selected when it''s background is blue');
     Exit;
   end;
   F := TForm(LB.Items.Objects[LB.ItemIndex]);
@@ -170,25 +158,17 @@ begin
 
   If F.WindowState = TWindowState.wsMinimized then
     F.WindowState := wsNormal;
-  F.BringToFront;
   F.Show;
-
 end;
-
-//procedure TSideBar.UpdateHandlesetal(const AappH, ACompH: HWND; AUpdateEvent: TNotifyEvent);//()(const AappH, ACompH: HWND; AUpdateEvent: TNotifyEvent);
-//begin
-//  FApp := AappH;
-//  FComplement := AcompH;
-//  AUpdateEvent := UpdateMainTick;
-//end;
 
 procedure TSideBar.ShrinkClick(Sender: TObject);
 begin
- var F := {Screen.Forms[0]; //}TForm(ListBox1.Items.Objects[ListBox1.ItemIndex]);
+  if ListBox1.ItemIndex = -1 then Exit;
+  var F := TForm(ListBox1.Items.Objects[ListBox1.ItemIndex]);
 
   if self.Parent <> nil then
   Self.ScaleBy(Biggly,Smaller);
-  //
+
   if F <> Nil then
   F.ScaleBy(Smaller,Biggly);
 end;
@@ -205,10 +185,10 @@ var
   Hnd: HWND;
 begin
   TaskTimer.Enabled := False;
-
-  //Task 0.5  was Task 3;
+//Task 0.5  was Task 3;
   Hnd := GetForegroundWindow;
-  //if GetTopWindow(Hx) <> Toper
+  // ^^ was if GetTopWindow(Hx) <> Toper
+  // shows apps being used.
   if Hnd <> TopWinControl then
   begin
     TopWinControl := Hnd;
@@ -218,41 +198,29 @@ begin
     memoShowMessages.Lines.add(format('%2.3f %s on top', [Time * 24, aClassName]));//Screen.Forms[0].Name]);
   end;
 
-  // task 1  Show remaining App when the app showing is closed.
-  //
-// moved to setComplementApp in MAIN
-// sends callback to Main
-//UpdateMainTick(Sender);
-   UpdateMainEvent; //assigned Main/
+// task 1  Show App when other app is closed.
+// moved to setDual in MAIN
+  UpdateRemoteTask; //assigned Main/
 
-  //CompAppHWND := parent as TMain)
-  //If not IsWindow(FComplement) then
-  //with Parent as TMain
-
-//  begin
-//    ComplementApp := 0;
-//    // bypass if wsMax'
-//    if WindowState = TWindowState.wsMinimized then
-//      WindowState := wsNormal;  // surfaces self if swMin'
-//    //Show;
-//  end;
 
 // task 2 show time and handles in use
 
-// moved to setComplementApp
-//    StatusBar.SimpleText := format('Hnd %d Comp %d Hr:%2.3f',[Handle, FComplementApp, Time * 24]);
+// moved to settwinH
+//    StatusBar.SimpleText := format('Hnd %d Comp %d Hr:%2.3f',[Handle, FtwinH, Time * 24]);
 
-//task 3 update Form Objects in LB
-//    if self.MDIChildCount > 0 then
+//task 3 update Forms listed in LB
   UpdateListUI(Sender);
-    //boo 100xs Jumper.Show;
+
+ //boo 100xs Jumper.Show;  // not needed and perhaps fighting the debugger
 
   TaskTimer.Enabled := True;
 end;
 
-procedure TSideBar.UpdateMainEvent;
+/// surfaces  minimized Main if Dual (other mainform) was closed.
+procedure TSideBar.UpdateRemoteTask;
 begin
-  if Assigned(FOnUpdateMainEvent) then FOnUpdateMainEvent(Self);
+  if Assigned(FOnUpdateRemoteTask) then
+        FOnUpdateRemoteTask(Self);
 end;
 
 var
@@ -291,11 +259,5 @@ begin
       showmessage(E.Message + #13 + E.ClassName);
   End;
 end;
-
-//procedure TSideBar.UpdateMainTick(Sender: TObject);
-//begin
-////
-//// if assigned (mainunitUpdate) then MainUnitUpdate(Sender);
-//end;
 
 end.
