@@ -1,17 +1,18 @@
 object MainForm: TMainForm
-  Left = 194
-  Top = 111
-  Hint = 'List all forms using Screen.forms'
+  Left = 184
+  Top = 104
+  Hint = 'Use Redo and Undo icons to move between desktops'
   Caption = 'DeskTop__One'
   ClientHeight = 489
   ClientWidth = 1010
   Color = clAppWorkSpace
+  DragMode = dmAutomatic
   ParentFont = True
   FormStyle = fsMDIForm
   VisualManager = FormTabsBar1
-  Position = poDefault
+  Position = poDesigned
+  OnActivate = FormActivate
   OnCreate = FormCreate
-  OnDeactivate = FormDeactivate
   TextHeight = 15
   object Label1: TLabel
     Left = 678
@@ -34,11 +35,10 @@ object MainForm: TMainForm
     ParentFont = True
     SimplePanel = True
     UseSystemFont = False
-    ExplicitWidth = 651
   end
   object FormTabsBar1: TFormTabsBar
     Left = 0
-    Top = 58
+    Top = 25
     Width = 1010
     Height = 30
     ParentColor = False
@@ -49,7 +49,6 @@ object MainForm: TMainForm
     TabMinWidth = 100
     TabMaxWidth = 250
     ShowTabsMenuButton = True
-    ExplicitWidth = 651
   end
   object ActionMainMenuBar1: TActionMainMenuBar
     Left = 0
@@ -70,11 +69,10 @@ object MainForm: TMainForm
     Font.Name = 'Lucida Console'
     Font.Style = []
     Spacing = 0
-    ExplicitWidth = 651
   end
   object ToolBar1: TToolBar
     Left = 0
-    Top = 25
+    Top = 55
     Width = 1010
     Height = 33
     BorderWidth = 1
@@ -88,7 +86,6 @@ object MainForm: TMainForm
     TabOrder = 3
     Transparent = False
     Wrapable = False
-    ExplicitWidth = 651
     object ToolButton9: TToolButton
       Left = 5
       Top = 0
@@ -168,14 +165,14 @@ object MainForm: TMainForm
       ImageName = 'Item11'
       Style = tbsDivider
     end
-    object ToolButton13: TToolButton
+    object tbSideBarFloat: TToolButton
       Left = 313
       Top = 0
       Hint = 'Show sidebar on side'
       Caption = 'floatJumper'
       ImageIndex = 2
       ImageName = 'Item3'
-      OnClick = ToolButton13Click
+      OnClick = tbSideBarFloatClick
     end
     object tbListForms2: TToolButton
       Left = 336
@@ -191,29 +188,26 @@ object MainForm: TMainForm
       Top = 0
       Hint = 'Load/Show Desk Top Two'
       Caption = 'tbOpenDT2'
-      ImageIndex = 4
-      ImageName = 'Item5'
+      ImageIndex = 19
+      ImageName = 'Item5A'
       OnClick = btnShow_Other_AppClick
     end
-    object tbOpenDT1: TToolButton
-      Left = 382
-      Top = 0
-      Hint = 'Load Desk Top One'
-      Caption = 'tbOpenDT1'
-      ImageIndex = 3
-      ImageName = 'Item4'
-      Style = tbsTextButton
-      Visible = False
-      OnClick = btnShowDT1Click
-    end
     object ToolButton15: TToolButton
-      Left = 405
+      Left = 382
       Top = 0
       Hint = 'Show SideBar Parent'
       Caption = 'ToolButton15'
       ImageIndex = 12
       ImageName = 'Item13'
       OnClick = ToolButton15Click
+    end
+    object tbtnTransfer: TToolButton
+      Left = 405
+      Top = 0
+      Hint = 'Move active window'
+      Caption = 'tbtnTransfer'
+      ImageIndex = 10
+      ImageName = 'Item11'
     end
   end
   object OpenDialog: TOpenDialog
@@ -591,6 +585,58 @@ object MainForm: TMainForm
               1202EC5A841A1C0D9E21D1E208707BA401A3C70288B4580CA60FB3C7E500A741
               039A58667861A1A22C0000000049454E44AE426082}
           end>
+      end
+      item
+        Name = 'Item4A'
+        SourceImages = <
+          item
+            Image.Data = {
+              89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
+              61000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+              00097048597300000EC200000EC20115284A800000018769545874584D4C3A63
+              6F6D2E61646F62652E786D7000000000003C3F787061636B657420626567696E
+              3D27EFBBBF272069643D2757354D304D7043656869487A7265537A4E54637A6B
+              633964273F3E0D0A3C783A786D706D65746120786D6C6E733A783D2261646F62
+              653A6E733A6D6574612F223E3C7264663A52444620786D6C6E733A7264663D22
+              687474703A2F2F7777772E77332E6F72672F313939392F30322F32322D726466
+              2D73796E7461782D6E7323223E3C7264663A4465736372697074696F6E207264
+              663A61626F75743D22757569643A66616635626464352D626133642D31316461
+              2D616433312D6433336437353138326631622220786D6C6E733A746966663D22
+              687474703A2F2F6E732E61646F62652E636F6D2F746966662F312E302F223E3C
+              746966663A4F7269656E746174696F6E3E313C2F746966663A4F7269656E7461
+              74696F6E3E3C2F7264663A4465736372697074696F6E3E3C2F7264663A524446
+              3E3C2F783A786D706D6574613E0D0A3C3F787061636B657420656E643D277727
+              3F3E2C94980B0000004D49444154384F636018058CE8021860D18BFF28FC3809
+              1C7AD0152E7AF11F430C268E15206BC0A9080A90E4995065A092389D8909300D
+              6020C2054800BB010C780C21D185980097C1A3807C0000809524EBC7B4E2A000
+              00000049454E44AE426082}
+          end>
+      end
+      item
+        Name = 'Item5A'
+        SourceImages = <
+          item
+            Image.Data = {
+              89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
+              61000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+              00097048597300000EC200000EC20115284A800000018769545874584D4C3A63
+              6F6D2E61646F62652E786D7000000000003C3F787061636B657420626567696E
+              3D27EFBBBF272069643D2757354D304D7043656869487A7265537A4E54637A6B
+              633964273F3E0D0A3C783A786D706D65746120786D6C6E733A783D2261646F62
+              653A6E733A6D6574612F223E3C7264663A52444620786D6C6E733A7264663D22
+              687474703A2F2F7777772E77332E6F72672F313939392F30322F32322D726466
+              2D73796E7461782D6E7323223E3C7264663A4465736372697074696F6E207264
+              663A61626F75743D22757569643A66616635626464352D626133642D31316461
+              2D616433312D6433336437353138326631622220786D6C6E733A746966663D22
+              687474703A2F2F6E732E61646F62652E636F6D2F746966662F312E302F223E3C
+              746966663A4F7269656E746174696F6E3E313C2F746966663A4F7269656E7461
+              74696F6E3E3C2F7264663A4465736372697074696F6E3E3C2F7264663A524446
+              3E3C2F783A786D706D6574613E0D0A3C3F787061636B657420656E643D277727
+              3F3E2C94980B0000004B49444154384F636018058CE8020C8B5EFC47E1C74960
+              AAC109D035C3C4D0C5D1F9B80591004C1ECD4026643578419C0423364B883700
+              8B6606140370D8C0C0805B3326205AE128A02A00000F5924EB426DA0D0000000
+              0049454E44AE426082}
+          end>
       end>
     Left = 252
     Top = 160
@@ -689,6 +735,16 @@ object MainForm: TMainForm
         CollectionIndex = 17
         CollectionName = 'Item18'
         Name = 'Item18'
+      end
+      item
+        CollectionIndex = 18
+        CollectionName = 'Item4A'
+        Name = 'Item4A'
+      end
+      item
+        CollectionIndex = 19
+        CollectionName = 'Item5A'
+        Name = 'Item5A'
       end>
     ImageCollection = ImageCollection1
     Left = 136
@@ -806,5 +862,10 @@ object MainForm: TMainForm
     Left = 136
     Top = 96
     StyleName = 'Platform Default'
+  end
+  object Timer1: TTimer
+    Interval = 333
+    Left = 704
+    Top = 88
   end
 end

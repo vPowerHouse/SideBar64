@@ -1,16 +1,16 @@
 unit MAIN;
-
+// forked from EMBA's Marco Cantu MDI uplift effort
 interface
 
-uses Winapi.Windows, System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Forms,
+uses
+  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Forms,
   Vcl.Controls, Vcl.Menus, Vcl.StdCtrls, Vcl.Dialogs, Vcl.Buttons, Winapi.Messages,
   Vcl.ExtCtrls, Vcl.ComCtrls, Vcl.StdActns, Vcl.ActnList, Vcl.ToolWin,
   Vcl.ImgList, Vcl.FormTabsBar, System.ImageList, System.Actions,
   Vcl.BaseImageCollection, Vcl.ImageCollection, Vcl.VirtualImageList,
-  Vcl.ActnMan, Vcl.ActnCtrls, Vcl.ActnMenus, Vcl.PlatformDefaultStyleActnCtrls
-  //,System.Types,
-  ,System.UITypes;
-    // ^ for dynarray
+  Vcl.ActnMan, Vcl.ActnCtrls, Vcl.ActnMenus, Vcl.PlatformDefaultStyleActnCtrls,
+  System.UITypes;
+
 const
   wsNormal     = System.UITypes.TWindowState.wsNormal;
   wsMinimized  = System.UITypes.TWindowState.wsMinimized;
@@ -20,22 +20,18 @@ const
   //StopOtherDeskTop: string = 'StopOtherDeskTop'; // command not used today
   DT_One = 'DeskTop_One';
   DT_Two = 'DeskTop_Two';
-  DT1winclassname = 'Pats1stDeskTop';
-  DT2winclassname = 'Second_DeskTop' ;
   Roles:TArray<string> = ['ZeroIndex', DT_One, DT_Two];
-  Form2s: TArray<string> = ['One','Two','Three','Four','Five','Six'];
+  Form2s: TArray<string> = ['One','Two','Three','Four','Five','SixteenThousand_OneHundred_NintyNine_NoHundreth'];
 type
-  TRoleEnum = (reZero, reDT1, reDT2);
-
-  // On the UI side tie in some data for convience
-  // the data side could DI to tie in some UI
-  TdataButton = class(TButton)
-    Form: TForm;
+  // On the UI controls side carry some data references for convenience
+  // the data side could use Dependance Injection to tie in UI controls
+  TDataButton = class(TButton)
+    Form: TControl;
     Strs: TStrings;
-  end;
+end;
 
+type
 
-//type
   TMainForm = class(TForm)
     OpenDialog: TOpenDialog;
     StatusBar: TStatusBar;
@@ -78,45 +74,45 @@ type
     ToolButton11: TToolButton;
     ToolButton12: TToolButton;
     ToolButton14: TToolButton;
-    ToolButton13: TToolButton;
+    tbSideBarFloat: TToolButton;
     tbListForms2: TToolButton;
     tbOpenDT2: TToolButton;
-    tbOpenDT1: TToolButton;
     ToolButton15: TToolButton;
+    tbtnTransfer: TToolButton;
+    Timer1: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure ListScreenFormsExecute(Sender: TObject);
     procedure btnShow_Other_AppClick(Sender: TObject);
     procedure tbListFormsClick(Sender: TObject);
-    procedure btnShowDT1Click(Sender: TObject);
     procedure FileFourOpenExecute(Sender: TObject);
     procedure FileNew1Execute(Sender: TObject);
     procedure FileOpen1Execute(Sender: TObject);
     procedure FileExit1Execute(Sender: TObject);
     procedure FileTwoOpenExecute(Sender: TObject);
     procedure FormActivate(Sender: TObject);
-    procedure FormDeactivate(Sender: TObject);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure HelpAbout1Execute(Sender: TObject);
-    procedure ToolButton13Click(Sender: TObject);
+    procedure tbSideBarFloatClick(Sender: TObject);
     procedure ToolButton15Click(Sender: TObject);
     procedure UpdateTaskfromRemote(Sender: TObject);
     procedure WindowCascade1Execute(Sender: TObject);
     procedure WindowTileHorizontal1Execute(Sender: TObject);
     procedure WindowTileVertical1Execute(Sender: TObject);
   private
-    FComplementApp: HWND;
+    FDual: HWND;
     FRole: NativeInt;
 
     { Private declarations }
     procedure btnDataclick(Sender: TObject);
     procedure CreateMDIChild(const Name: string);
-    procedure SetComplementApp(const Value: HWND);
+    procedure SetDual(const Value: HWND);
     procedure SetRole(const Value: NativeInt);
   protected
     procedure CreateParams(var Params: TCreateParams); override;
   public
-    { Public declarations }
+    procedure OpenMDIChild(const FileName: string);
   published
-    property ComplementApp: HWND read FComplementApp write SetComplementApp;
+    property Dual: HWND read FDual write SetDual;
     property Role: NativeInt read FRole write SetRole;
   end;
 type
@@ -125,9 +121,9 @@ type
     procedure CreateParams(var Params: TCreateParams); override;
   end;
 
-var
-  MainForm,
-  MainForm2: TMainForm2;
+//var
+//  MainForm: TMainForm;
+//  MainForm2: TMainForm2;
 
 
 implementation
@@ -136,24 +132,26 @@ implementation
 
 uses CHILDWIN, About,
      baseform, Unit2, Unit4,
+     TwoHeadTypes,
      NavTuner,
      ShellAPI,
      TlHelp32, Winapi.PsAPI,
      Math;
-//var
-//  Jumper: TSideBar;
+
+var  SideBar: TSideBar;
 
 procedure jmpLogAdd(const inStr: string);
 begin
-  Jumper.MemoAdd(inStr);
+  SideBar.MemoAdd(inStr);
 end;
 
 // alternate? https://en.delphipraxis.net/topic/3463-rzlauncher-vs-win-api-call/?tab=comments#comment-29107
 // source https://stackoverflow.com/questions/38759198/open-external-application-with-passing-parameters-using-delphi-application
 
 function RunApplication(const AExecutableFile, AParameters: string; const AShowOption: Integer = SW_SHOWNORMAL): NativeUInt;
-var
-  _SEInfo: TShellExecuteInfo;
+
+var _SEInfo: TShellExecuteInfo;
+
 begin
   Result := 0;
   if not FileExists(AExecutableFile) then
@@ -175,128 +173,143 @@ end;
 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
-//  Jumper := TSideBar.Create(Application);
-  Jumper.OnUpdateMainEvent := UpdateTaskfromRemote;
+  SideBar := TSideBar.Create(Application);
+  SideBar.OnUpdateRemoteTask := UpdateTaskfromRemote;
+  // start timer
+  SideBar.btnRunStopClick(Sender);
 end;
 
-/// baby step touching the captions through Application.Screen found in forms
-///F.Caption := F.Caption + ' touching';
-/// leave to
 procedure TMainForm.ListScreenFormsExecute(Sender: TObject);
 begin
   jmpLogAdd(Screen.ActiveForm.Caption + ' Looked at ');
   for var i := 0 to Screen.Formcount - 1 do
     jmpLogAdd(Screen.Forms[i].Name);
-  // Staged event allowing the sidebar to show that different dialogs are
-  // when using style
-  ShowMessage(Screen.ActiveForm.Name);
+{   Staged event allowing the sidebar to show that different dialogs are
+   when using style
+  ShowMessage(Screen.Forms[i].Name);
+ baby step touching the captions through Application.Screen found in forms
+F.Caption := F.Caption + ' touching'; }
+end;
+
+procedure TMainForm.OpenMDIChild(const FileName: string);
+begin
+  CreateMDIChild(FileName);
 end;
 
 procedure TMainForm.btnDataclick(Sender: TObject);
 var
   ChildBtn: TdataButton;
 begin
-  if Sender is TdataButton then
-    ChildBtn := (Sender as TdataButton)
-  else
-    Exit;
-
-  if OpenDialog.Execute then
-  begin
-    ChildBtn.Strs.LoadFromFile(OpenDialog.FileName);
-    ChildBtn.Form.Caption := OpenDialog.FileName;
-  end;
+  if Sender is TdataButton
+    then begin
+           ChildBtn := (Sender as TdataButton);
+           if OpenDialog.Execute then
+             ChildBtn.Strs.LoadFromFile(OpenDialog.FileName);
+         end;
 end;
 
 procedure TMainForm.btnShow_Other_AppClick(Sender: TObject);
 var
-  sParamStrLine: string;
-//  sH: string;
-  RC: HWNd;
-
-//  h2,h3,h4,H5, h6: HWND;
-//  b: boolean;
-//  R: hwnd;
-//  s: string;
-//begin
-  //if b then        h2       h3       h4
-
+  RC: HWND;
 begin
-
-  if IsWindow(FComplementApp)
+  if IsWindow(FDual)
     then begin
-      if IsIconic(FComplementApp) then
-         ShowWindow(FComplementApp, SW_RESTORE);
-      SetForegroundWindow(FComplementApp);
+      if IsIconic(FDual) then
+        ShowWindow(FDual, SW_RESTORE);
+      SetForegroundWindow(FDual);
       Sleep(389);
       WindowState := wsminimized;
     end
   else
   begin
-    RC := RunApplication('MDIAPP.exe', '', 1);
+    RC := RunApplication('MDIAPP.exe', '', SW_SHOWNORMAL);
     sleep(300);
-    ComplementApp := FindWindow(DT2winclassname,nil);//GetforegroundWindow;
+    Dual := FindWindow(DT2winclassname,nil);//GetforegroundWindow;
     jmpLogAdd(Format('PID:%d %s',[RC, SysErrorMessage(GetLastError)] ));
     ///a Using 'Hide' simply does not work here
     //     Hide;
-    // The Iconic bottom feeders give 'vintage' look to apps :)
-    // though the styled version needs a click on Icon to restore.
-    //  Button1Click(Sender);
-    //btnShowDT1Click(Sender);
-    //btnShow_Other_AppClick(Sender);
-    //WindowState := wsminimized;
-//    Exit
+    //b Somehow the mainforms show as minimized windows behind the taskbar.
+    // The Iconic bottom feeders give 'vintage' look to the apps :)
+    // though the styled version needs a click on the subs Icon to restore.
   end;
-
-
-
 end;
+
+//var ani: Boolean = true;
+//var aniStep: NativeInt = 0;
+//var offset: Integer;
+//procedure TMainForm.Button1Click(Sender: TObject);
+//
+//    procedure dostuff(bjct: TObject);
+//    begin
+//      Inc(aniStep);
+//    end;
+//begin
+//  Inc(aniStep);
+//  If aniStep < 111 then
+//  begin
+//      offset := 1 + aniStep div 2;
+//      Timer1.Enabled := true;
+//      Button1.Caption := format('%d',[aniStep]);
+//      Button1.Update;
+//      //aniHelper(sender, aniStep);
+//      dostuff(sender);
+//
+//  end
+//  else
+//    begin
+//      aniStep := 0;
+//      Timer1.Enabled := false;
+//    end;
+//
+//
+//end;
 
 procedure TMainForm.tbListFormsClick(Sender: TObject);
 begin
   ListScreenFormsExecute(Sender);
 end;
 
-procedure TMainForm.btnShowDT1Click(Sender: TObject);
-//var
-//  h2,h3,h4,H5, h6: HWND;
-////  b: boolean;
-//  R: hwnd;
-//  s: string;
-begin
-//  r:= LoaderVar(h2,h3,h4,H5,h6);
-  //if b then        h2       h3       h4
-  //s:= format('dprHs %d dtONE:%d dtTWO:%d Top:%d x:%d', [h2,h3,h4,H5,h6]);
-//  s:= 'need to check role';
-//  StatusBar.SimpleText := 'Initializing back to One';
-//  tbOpenDT1.Hint := 'show DT One';
-//  label1.caption :=  s;
-//  Button1.Enabled := True;
+//20mar2025 relic of
+//procedure TMainForm.btnShowDT1Click(Sender: TObject);
+////var
+////  h2,h3,h4,H5, h6: HWND;
+//////  b: boolean;
+////  R: hwnd;
+////  s: string;
+//begin
+////  r:= LoaderVar(h2,h3,h4,H5,h6);
+//  //if b then        h2       h3       h4
+//  //s:= format('dprHs %d dtONE:%d dtTWO:%d Top:%d x:%d', [h2,h3,h4,H5,h6]);
+////  s:= 'need to check role';
+////  StatusBar.SimpleText := 'Initializing back to One';
+////  tbOpenDT1.Hint := 'show DT One';
+////  label1.caption :=  s;
+////  Button1.Enabled := True;
+////
+////  Button1.Caption := 'DT One';
+////  btnShow_Other_App.Enabled := False;
 //
-//  Button1.Caption := 'DT One';
-//  btnShow_Other_App.Enabled := False;
-
-
-end;
+//
+//end;
 
 procedure TMainForm.FileFourOpenExecute(Sender: TObject);
 begin
-  var
-    ChildForm4Index: Integer := 0;
-  var
-    CreatedAll_NamesProvided: Boolean;
-
-  repeat
     var
-      ChildForm4 := TForm4.Create(Application);
-    ChildForm4.Name := ChildForm4.ComboBox1.Items[ChildForm4Index];
-    ChildForm4.OnActivate := FormActivate;
-    ChildForm4.OnDeActivate := FormDeactivate;
+      ChildForm4Index: Integer := 0;
+    var
+      CreatedAll_NamesProvided: Boolean;
+
+    repeat
+      var
+        ChildForm4 := TForm4.Create(Application);
+      ChildForm4.Name := ChildForm4.ComboBox1.Items[ChildForm4Index];
+      ChildForm4.OnActivate := FormActivate;
+      ChildForm4.ONCloseQuery := FormCloseQuery;
 
 
-    Inc(ChildForm4Index);
-    CreatedAll_NamesProvided := ChildForm4Index + 1 = ChildForm4.ComboBox1.Items.Count;
-  until CreatedAll_NamesProvided;
+      Inc(ChildForm4Index);
+      CreatedAll_NamesProvided := ChildForm4Index + 1 = ChildForm4.ComboBox1.Items.Count;
+    until CreatedAll_NamesProvided;
 
 end;
 
@@ -308,11 +321,12 @@ begin
   Child := TMDIChild.Create(Application);
   Child.Caption := Name;
   Child.OnActivate := FormActivate;
+  CHILD.OnCloseQuery := FormCloseQuery;
   if FileExists(Name)
     then Child.Memo1.Lines.LoadFromFile(Name)
   else
     begin
-      var btnData := TdataButton.Create(Self);
+      var btnData := TdataButton.Create(Child);
       btnData.Parent := Child;
       btnData.Left := 10;
       btnData.Top := 10;
@@ -350,61 +364,28 @@ begin
   ChildAbout.OnActivate := FormActivate;
 end;
 
-procedure TMainForm.SetComplementApp(const Value: HWND);
+procedure TMainForm.SetDual(const Value: HWND);
 var
   s, s1, s2: string;
-  ImageIdx: Integer;
-  RoleOther: TRoleEnum;
-  btnOutShow: Boolean;
-  btnbackShow: Boolean;
 begin
-  if ComplementApp <> Value then
+  if Dual <> Value then
   begin
-    FComplementApp := Value;
+    FDual := Value;
     s := 'Show ';
     // StatusBar.SimpleText gets overwritten
-    jmpLogAdd(Format('%s %d Comp %d', [Roles[Role], Handle, FComplementApp]));
+    jmpLogAdd(Format('%s %d Dual %d', [Roles[Role], Handle, FDual]));
     if Value = 0 then
-      s := 'Start';
+      s := 'Start ';
     // To surface instance when other instance is closed
     // not working or losing the normal size
     if (Value = 0) and (WindowState = wsMinimized) then
     begin
       WindowState := wsNormal;
-      s1 := ' Closing?';
+      s1 := ' Opened';
     end
-    else s1 := ' ca setter';
-    // end;
-    //'Port' Invertor
-    case TRoleEnum(Role) of
-     reZero:
-        begin
-          RoleOther := reZero;
-          btnOutShow := True;
-          ImageIdx := 3;
-          //btnbackShow := True;
-        end;
-      reDT1:
-        begin
-          RoleOther := reDT2;
-          btnOutShow := True;
-          ImageIdx := 3;
-          //btnbackShow := False;
-        end;
-      reDT2:
-        begin
-          RoleOther := reDT1;
-          btnOutShow := True;
-          ImageIdx := 4;
-          btnbackShow := True;
-        end;
-    end;
-    s2 := Format('%s %s %s', [s, Roles[Ord(RoleOther)], s1]);
-    //tbOpenDT1.Hint := s2;
+    else s1 := 'DT_2';
+    s2 := Format('%s %s %s', [s, Roles[Role], s1]);
     tbOpenDT2.Hint := s2;
-    tbOpenDT2.Visible := btnOutShow;
-    tbOpenDT2.ImageIndex := ImageIdx;
-    //tbOpenDT1.Visible := btnbackShow;
   end;
 end;
 
@@ -432,158 +413,133 @@ end;
 
 procedure TMainForm.FileTwoOpenExecute(Sender: TObject);
 var
-
   MDIChildForm2: TForm2;
   // SDA: TStringDynArray;
 begin
   // SDA := Form2s;
   /// assigned doesn't work on child windows?
   // if not assigned(Form2) then
-
-  // var Boo does not work
-
-
+  // var Boo does not work note assigned works now 3-20-2025
   for var mdiChildName in Form2s do // was SDA do
-  // while TwoIdx <= High(form2s) do
   begin
-      // create first
     MDIChildForm2 := TForm2.Create(Application);
     MDIChildForm2.Name := mdiChildName; // Form2s[TwoIdx];
-    // fixup later  ~ wire up messages
+    // fixup  ~ wire up messages
     MDIChildForm2.OnActivate := FormActivate;
-  //  Inc(TwoIdx);
+    MDIChildForm2.OnCloseQuery := FormCloseQuery;
   end;
 end;
-//  end;(
-//  while TwoIdx <= High(form2s) do
-//  begin
-//  Repeat
-//    var mdiForm2 := TForm2.Create(Application);
-//          mdiform2.Name := Form2s[TwoIdx];
-//              // fixup later
-//                  mdiForm2.OnActivate := FormActivate;
-//                      Inc(TwoIdx);
-//                        Until TwoIdx >= High(Form2s);
-//
-//end;
 
 procedure TMainForm.FormActivate(Sender: TObject);
-//var
-//  LZ: TControl;
 begin
-  //inherited;
-
-  if (Application.MainForm.MDIChildCount < 3)
-    // and (Sender is TMainForm)
-    // or (Sender is TMainForm2)
+  inherited;
+// also close query can set Sidebar parent
+  if (Application.MainForm.MDIChildCount < 1)
      then begin
-        Jumper.Parent := nil;//LandingZone;
-        if Jumper.Visible = False then  Jumper.Visible := True;
-        Jumper.BorderStyle := bsSizeable;
+        SideBar.Parent := nil;//LandingZone;
+        if SideBar.Visible = False then  SideBar.Visible := True;
+        SideBar.BorderStyle := bsSizeable;
      end
+  else
+     if Sender is TForm
+      then begin
+        var form := TForm(Sender);
 
-  else if Sender is TForm then
-  begin
-    var form := TForm(Sender);
-    var AdjustHeight := Jumper.memoShowMessages.top + 150;
+        var AdjustHeight := SideBar.memoShowMessages.top + 150;
         AdjustHeight := Max(AdjustHeight, form.Height);
         form.Height := AdjustHeight;
-    Jumper.BorderIcons := [];
-    Jumper.BorderStyle := bsnone;
-    Jumper.Parent := form;
-  end;
+        SideBar.BorderIcons := [];
+        SideBar.BorderStyle := bsnone;
+        SideBar.Parent := form;
+      end;
 end;
 
-procedure TMainForm.FormDeactivate(Sender: TObject);
+procedure TMainForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
-  if (Application.MainForm.MDIChildCount < 3)
-    // and (Sender is TMainForm)
-    // or (Sender is TMainForm2)
-     then begin
-        Jumper.Parent := nil;//LandingZone;
-        if Jumper.Visible = False then  Jumper.Visible := True;
-        Jumper.BorderStyle := bsSizeable;
-     end
+  if Assigned(SideBar) and (Application.MainForm.MDIChildCount < 2)
+    then begin
+      SideBar.Parent := nil;//LandingZone;
+      if SideBar.Visible = False then  SideBar.Visible := True;
+      SideBar.BorderStyle := bsSizeable;
+    end;
 
+   CanClose := True;
 end;
 
 procedure TMainForm.SetRole(const Value: NativeInt);
 var
-  s, s1, s2: string;
+  s, s1: string;
   ImageIdx: Integer;
   RoleOther: TRoleEnum;
-  btnOutShow: Boolean;
-  btnbackShow: Boolean;
-
 begin
   FRole := Value;
+  RoleOther := reZero;
+  ImageIdx := 19;
   Caption := Roles[FRole];
-  //tbOpenDT2.Hint := Roles[FRole-1];
   case TRoleEnum(Role) of
-     reZero:
-        begin
-          RoleOther := reDT2;
-          btnOutShow := True;
-          ImageIdx := 4;
-          //btnbackShow := True;
-        end;
-      reDT1:
-        begin
-          RoleOther := reDT2;
-          btnOutShow := True;
-          ImageIdx := 4;
-          //btnbackShow := False;
-        end;
-      reDT2:
-        begin
-          RoleOther := reDT1;
-          btnOutShow := False;
-          ImageIdx := 3;
-          btnbackShow := True;
-        end;
-    end;
-  s2 := Format('%s %s %s', [s, Roles[Ord(RoleOther)], s1]);
-  tbOpenDT2.Hint := s2;
+    reZero:
+      begin
+        RoleOther := reDT2;
+        ImageIdx := 19;
+      end;
+    reDT1:
+      begin
+        RoleOther := reDT2;
+        ImageIdx := 19;
+      end;
+    reDT2:
+      begin
+        RoleOther := reDT1;
+        ImageIdx := 18;
+      end;
+  end;
+  s  := Roles[Ord(FRole)];
+  s1 := Roles[Ord(RoleOther)];
+  //s2 := Format('%s %s %s', [s, Roles[Ord(RoleOther)], s1]);
+  tbOpenDT2.Hint := Format('Showing:%s. Switch to :%s?',[s, s1]);
   tbOpenDT2.ImageIndex := ImageIdx;
 end;
 
-procedure TMainForm.ToolButton13Click(Sender: TObject);
+var Sticky: Boolean = True;
+procedure TMainForm.tbSideBarFloatClick(Sender: TObject);
 begin
-  if not Assigned(Jumper) then
-    Jumper:= TSideBar.Create(Application);
-  Jumper.Parent := nil;
-  //Jumper.movetoFront;
-  Jumper.Show;
+  if not Assigned(SideBar) then
+    SideBar:= TSideBar.Create(Application);
+
+  Sticky := not Sticky;
+  if Sticky then
+    SideBar.Parent := Self
+  else
+    SideBar.Parent := nil;
+  SideBar.Show;
 end;
 
 procedure TMainForm.ToolButton15Click(Sender: TObject);
-var
-  WC: Twincontrol;
+//var
+//  WC: Twincontrol;
 begin
-  WC :=GetParentForm(jumper,True);
-  StatusBar.SimpleText := WC.GetNamePath;
-  WC :=GetParentForm(jumper,false);
-  ShowMessage(WC.GetNamePath);
+//  WC :=GetParentForm(SideBar,True);
+//  StatusBar.SimpleText := WC.GetNamePath;
+//  WC :=GetParentForm(SideBar,false);
+//  ShowMessage(WC.GetNamePath);
+  if SideBar.Parent <> nil then
+    ShowMessage(SideBar.Parent.Name)
+  else
+    ShowMessage('no parent');
 end;
-
 
 procedure TMainForm.UpdateTaskfromRemote(Sender: TObject);
 begin
-  // Task update start switch when fellow app is started
+  // helper window timer calls this test
+  // to
+  // surface this(self) instance hidden app when fellow instance is closed.
 
-  // surface hidden app when fellow app is closed.
-  if             (ComplementApp > 0)
-     and not IsWindow(ComplementApp)
-     and (WindowState = wsMinimized)
-   then
- // begin
-    ComplementApp := 0;
-  //  windowstate := TWindowState.wsNormal;
- //   BringtoFront;
- //   Visible := True;
-    //if Visible = False then  Visible := True;
- // end;
 
+  if  (Dual > 0) and not IsWindow(Dual)
+                 and (WindowState = wsMinimized)
+               then
+                 // Dual property setter has code to surface
+                 Dual := 0;
 end;
 
 { TMainForm2 }
